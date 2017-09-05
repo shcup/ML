@@ -102,9 +102,11 @@ def process_word2vec_avg(file_name, seller_idx, vectors, norms):
             score = s + score
             cnt = cnt + 1
  
-      print str(score/cnt) + '\t' + sp[2] 
+      if cnt != 0:
+        score = score / cnt
+      print str(score) + '\t' + sp[2] 
 
 
 seller_idx, vectors, norms = loadFile2Numpy('output_word2vec.txt')
-process_word2vec_max('shop_s2s_sample_data.txt', seller_idx, vectors, norms)
+process_word2vec_avg('shop_s2s_sample_data.txt', seller_idx, vectors, norms)
     

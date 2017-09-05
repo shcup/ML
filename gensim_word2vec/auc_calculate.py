@@ -49,6 +49,8 @@ scores=[]
 labels=[]
 for line in sys.stdin:
   sp = line.strip().split()
+  if len(sp) != 2:
+    continue
   scores.append(float(sp[0]))
   labels.append(float(sp[1]))
 print 'start to calculate'
