@@ -35,7 +35,6 @@ class LiteSQL():
     try:
       sql = 'CREATE TABLE if not exists detail_table \
             ( id long PRIMARY KEY, \
-              shop_id long, \
               nick, \
               title, \
               pict_url, \
@@ -50,7 +49,7 @@ class LiteSQL():
 
   def get(self, id, itemcf_table):
   
-    sql = ' \
+    sql = '\
         select t1.id2, t1.score, t2.nick, t2.title \
         from ( \
         select  id2, score \

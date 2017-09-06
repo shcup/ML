@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<style>
+#header {
+    background-color:black;
+    color:white;
+    text-align:center;
+    padding:5px;
+}
+#side1 {
+    background-color:#eeeeee;
+    float:left;
+    width:33.3%;
+    padding:0px;        
+}
+#side2 {
+    background-color:#eeeeee;
+    float:left;
+    width:33.3%;
+    padding:0px;     
+}
+#side3 {
+    background-color:#eeeeee;
+    float:left;
+    width:33.3%;
+    padding:0px;     
+}
+#footer {
+    background-color:black;
+    color:white;
+    clear:both;
+    text-align:center;
+   padding:5px;    
+}
+</style>
+
+<script>
+function RemoteRequest(table_str, id, res_field)
+{
+   //创建ajax对象，写兼容
+   if(window.XMLHttpRequest){
+    var xhr=new XMLHttpRequest();
+   }else{
+    var xhr=new ActiveXObject("Microsoft.XMLHTTP");
+   };
+   //设置发送数据的地址和方法
+  xhr.open("GET","/itemcf?table="+table_str+"&id="+id,true);
+   //设置我们的请求头信息,post方法才写请求头
+   //xhr.setRequestHeader("Content-type","application/json");
+   //发送数据
+   xhr.send();
+   //绑定onreadystatechange事件 
+  var h = ''
+  xhr.onreadystatechange=function(){
+  if(xhr.readyState==4 && xhr.status==200){
+     var data=xhr.responseText;
+     //json字符串转换成为json对象  , data=eval("("+data+")");evel不存在兼容性问题，但是会有安全漏洞。
+     data=JSON.parse(data);
+    h= "<table id='tb' border='1' >";  
+    h+= "<tr>";  
+    var head=new Array("id","score","name", 'ss', 'aaaa', 'ssssssx')
+    for(var headColumn in head){  
+      h+="<td>"+head[headColumn]+"</td>"; 
+    }  
+    h+="</tr>";  
+    for(var i=0;i<data.length;i++){  
+      h+="<tr>"  
+      for(var row in data[i]){  
+        h+="<td>"+data[i][row]+"</td>";   
+      }  
+      h+="</tr>";  
+    }  
+    h+="</table>"  
+     
+     document.getElementById(res_field).innerHTML=h;
+    };
+   };
+}
+
+function ClickButton1() 
+{
+   document.getElementById('field1').innerHTML=''
+   var table_str = document.getElementById('table1').value;
+   var id = document.getElementById('id1').value;
+   RemoteRequest(table_str, id, 'field1'); 
+}
+function ClickButton2() 
+{
+   document.getElementById('field2').innerHTML=''
+   var table_str = document.getElementById('table2').value;
+   var id = document.getElementById('id2').value;
+   RemoteRequest(table_str, id, 'field2'); 
+}
+function ClickButton3() 
+{
+   document.getElementById('field3').innerHTML=''
+   var table_str = document.getElementById('table3').value;
+   var id = document.getElementById('id3').value;
+   RemoteRequest(table_str, id, 'field3'); 
+}
+
+</script>
+</head>
+
+<body>
+
+<div id="header">
+<h1>ItemCF Demo</h1>
+</div>
+
+<div id='side1'>
+  <h1 style="font-family:verdana;text-align:center">Side1</h1>
+  <div class='input_area' style="text-align:center">
+  <select id="table1" >
+    <option value="sw_buy">sw_buy</option>
+    <option value="sw_cart">sw_cart</option>
+    <option value="itemcf_table" selected="selected">itemcf_table</option>
+    <option value="sw_fav">sw_fav</option>
+    <option value="sw_click">sw_click</option>
+    <option value="sw_all">sw_all</option>
+  </select>
+  <input type="text" id="id1">
+  <button onclick="ClickButton1()" >UPDATE</button>
+  <br>
+  <hr />
+  </div>
+  <div id='field1'> </div>
+</div>
+
+<div id='side2'>
+  <h1 style="font-family:verdana;text-align:center">Side2</h1>
+  <div class='input_area' style="text-align:center">
+  <select id="table2" >
+    <option value="sw_buy">sw_buy</option>
+    <option value="sw_cart">sw_cart</option>
+    <option value="itemcf_table" selected="selected">itemcf_table</option>
+    <option value="sw_fav">sw_fav</option>
+    <option value="sw_click">sw_click</option>
+    <option value="sw_all">sw_all</option>
+  </select>
+  <input type="text" id="id2">
+  <button onclick="ClickButton2()" >UPDATE</button>
+  <br>
+  <hr />
+  </div>
+  <div id='field2'> </div>
+</div>
+
+<div id='side3'>
+  <h1 style="font-family:verdana;text-align:center">Side3</h1>
+  <div class='input_area' style="text-align:center">
+  <select id="table3" >
+    <option value="sw_buy">sw_buy</option>
+    <option value="sw_cart">sw_cart</option>
+    <option value="itemcf_table" selected="selected">itemcf_table</option>
+    <option value="sw_fav">sw_fav</option>
+    <option value="sw_click">sw_click</option>
+    <option value="sw_all">sw_all</option>
+  </select>
+  <input type="text" id="id3">
+  <button onclick="ClickButton3()" >UPDATE</button>
+  <br>
+  <hr />
+  </div>
+  <div id='field3'> </div>
+</div>
+
+
+</body>
+</html>
