@@ -9,18 +9,18 @@
     background-color:black;
     color:white;
     text-align:center;
-    padding:5px;
+padding:5px;
 }
 #side1 {
     background-color:#eeeeee;
     float:left;
-    width:33.3%;
+    width:50%;
     padding:0px;        
 }
 #side2 {
     background-color:#eeeeee;
     float:left;
-    width:33.3%;
+    width:50%;
     padding:0px;     
 }
 #side3 {
@@ -62,15 +62,23 @@ function RemoteRequest(table_str, id, res_field)
      data=JSON.parse(data);
     h= "<table id='tb' border='1' >";  
     h+= "<tr>";  
-    var head=new Array("id","score","name", 'ss', 'aaaa', 'ssssssx')
+    var head=new Array("id","score","nick", 'shop_name', 'shop_url')
     for(var headColumn in head){  
       h+="<td>"+head[headColumn]+"</td>"; 
     }  
     h+="</tr>";  
     for(var i=0;i<data.length;i++){  
       h+="<tr>"  
+      var cnt = 1;
       for(var row in data[i]){  
-        h+="<td>"+data[i][row]+"</td>";   
+        if (cnt == 5) {
+          e = "<a href="+data[i][row]+' target="view_window" >链接</a>'
+        }
+        else{
+          e = data[i][row];
+        }
+        h+="<td>"+e+"</td>";   
+        cnt = cnt + 1;
       }  
       h+="</tr>";  
     }  
@@ -149,26 +157,6 @@ function ClickButton3()
   </div>
   <div id='field2'> </div>
 </div>
-
-<div id='side3'>
-  <h1 style="font-family:verdana;text-align:center">Side3</h1>
-  <div class='input_area' style="text-align:center">
-  <select id="table3" >
-    <option value="sw_buy">sw_buy</option>
-    <option value="sw_cart">sw_cart</option>
-    <option value="itemcf_table" selected="selected">itemcf_table</option>
-    <option value="sw_fav">sw_fav</option>
-    <option value="sw_click">sw_click</option>
-    <option value="sw_all">sw_all</option>
-  </select>
-  <input type="text" id="id3">
-  <button onclick="ClickButton3()" >UPDATE</button>
-  <br>
-  <hr />
-  </div>
-  <div id='field3'> </div>
-</div>
-
 
 </body>
 </html>

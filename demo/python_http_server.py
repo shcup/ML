@@ -58,7 +58,7 @@ class TodoHandler(BaseHTTPRequestHandler):
         self.send_error(501, 'table not found')
         return
 
-      res = db.get(int(params['id'][0]), params['table'][0])
+      res = db.get2(int(params['id'][0]), params['table'][0])
       message = json.dumps(res)
 
       self.send_response(200)
