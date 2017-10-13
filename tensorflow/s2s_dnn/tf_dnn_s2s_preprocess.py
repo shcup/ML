@@ -18,11 +18,11 @@ class TFDnnS2S(object):
     self.batch_size = 500
     self.display_step = 1
     self.embedding_size = 100
-    self.n_hidden_1 = 256
-    self.n_hidden_2 = 128
-    self.n_classes = 0
+    self.n_hidden_1 = 128
+    self.n_hidden_2 = 64
+    self.n_classes = 1000000
     self.max_window_size = 100
-    self.seed_seller_size = 0
+    self.seed_seller_size = 1000000
     self.seed_seller_id_dict = {}
     self.label_seller_size = 0
     self.label_seller_id_dict = {}
@@ -36,41 +36,70 @@ class TFDnnS2S(object):
     self.x_batch = None
     self.y_batch = None
 
-    self.vector = None
+    self.vector = None         
 
+  def preprocess_data(self, raw_data, processed_data, seed_seller_mapping, target_seller_mapping):
 
-  def init_data(self, training_data, word2vec):
-    
+    seed_seller_id_dict = {}
+    label_seller_id_dict = {} 
+
+    for line in open(raw_data):
+      seeds, label = line.strip().split('\t')
+      sp = seeds.split(',')
+      for s in sp:
+        if s not in seed_seller_id_dict:
+          seed_seller_id_dict[s] = 1
+        else:
+          seed_seller_id_dict[s] = seed_seller_id_dict[s] + 1
+
+      if label not in label_seller_id_dict:
+        label_seller_id_dict[label] = 1
+      else:
+        label_seller_id_dict[label] = label_seller_id_dict[label] + 1
+
+    sorted_seed_seller = sorted(seed_seller_id_dict.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
+    select_seed_seller = sorted_seed_seller[0:1000000]
+
+    sorted_label_seller = sorted(label_seller_id_dict.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
+    select_label_seller = sorted_label_seller[0:1000000]
+
+    seed_seller_encode = {}
     idx = 0
-    idx1 = 0
-    for line in open(training_data):
-      sp = line.strip().split('\t')
-      if len(sp) != 2:
-        continue
-      history,target = sp
-      histories = history.split(',')
-      for h in histories:
-        if h not in self.seed_seller_id_dict:
-          self.seed_seller_id_dict[h]=idx
-          idx = idx + 1
-      if target not in self.label_seller_id_dict:
-        self.label_seller_id_dict[target] = idx1
-        idx1 = idx1 + 1
+    for k,v in select_seed_seller:
+      seed_seller_encode[k] = idx
+      idx += 1
+    label_seller_encode = {}
+    idx = 0
+    for k,v in select_label_seller:
+      label_seller_encode[k] = idx
+      idx += 1
 
-    print "Finish loading the click data," + str(idx) + " sellers."
-    self.seed_seller_size = len(self.seed_seller_id_dict)
-    self.n_classes = len(self.label_seller_id_dict)
 
-    return
+    print "Dump seed id mapping"
+    f_seed = open(seed_seller_mapping,"w")
+    for k,v in select_seed_seller:
+      f_seed.write(k+"\t"+str(v)+"\t"+str(seed_seller_encode[k])+"\n")
+    f_seed.close()
+    f_target = open(target_seller_mapping,"w")
+    for k,v in select_label_seller:
+      f_target.write(k+"\t"+str(v)+"\t"+str(label_seller_encode[k])+"\n")
+    f_target.close()
 
-    for line in open(word2vec):
-      seller_id, vec = line.split('\t', 1)
-      if seller_id in self.seller_id_dict:
-        idx = self.seller_id_dict[seller_id]
-        vec = np.fromstring(vec, dtype=np.float32, sep=' ')
-        self.vector[idx]=vec
-    print "Finish loading the word2vec data"
-          
+    print "Start process data"
+    f_out = open(processed_data,"w")
+    for line in open(raw_data):
+      seeds, label = line.strip().split('\t')
+      sp = seeds.split(',')
+      seed_array = []
+      for s in sp:
+        if s in seed_seller_encode:
+          seed_array.append(str(seed_seller_encode[s]))
+
+      if len(seed_array) > 0 and label in label_seller_encode:
+        label_id = str(label_seller_encode[label])
+        f_out.write(','.join(seed_array)+"\t"+label_id+"\n")
+    f_out.close() 
+
 
 
   def read_data(self, pos, batch_size, data_lst):
@@ -83,11 +112,11 @@ class TFDnnS2S(object):
     for line in batch:
       seed,label = line.strip().split('\t')
       seeds = seed.split(',')
-      y.append(self.label_seller_id_dict[label])
+      y.append(int(label))
       col_no = 0
       for i in seeds:
         if i in self.seed_seller_id_dict:
-          x[line_no][col_no] = self.seed_seller_id_dict[i]
+          x[line_no][col_no] = int(i) 
           mask[line_no][col_no] = 1
           col_no += 1
           if col_no >= self.max_window_size:
@@ -179,8 +208,8 @@ class TFDnnS2S(object):
 
   def run(self):  
   
-    train_file='click_data_sample.txt'
-    self.init_data(train_file, 'word2vec.txt')
+    train_file='processed_click_data.txt'
+    #self.init_data(train_file, 'word2vec.txt')
 
     pred,y_batch=self.build_graph()
     cost, out_layer=self.build_loss(pred, y_batch)
@@ -256,3 +285,4 @@ class TFDnnS2S(object):
 exp = TFDnnS2S()
 #exp.restore()
 exp.run()
+#exp.preprocess_data('click_data.txt', 'processed_click_data.txt', 'seed_id_mapping.txt', 'label_id_mapping.txt')
