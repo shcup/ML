@@ -26,7 +26,7 @@ class TFDnnS2S(object):
     self.seed_seller_id_dict = {}
     self.label_seller_size = 0
     self.label_seller_id_dict = {}
-    self.training_epochs = 10
+    self.training_epochs = 3
     self.embedding = {}
     self.weights = {}
     self.biases = {}
@@ -115,24 +115,21 @@ class TFDnnS2S(object):
       y.append(int(label))
       col_no = 0
       for i in seeds:
-        if i in self.seed_seller_id_dict:
-          x[line_no][col_no] = int(i) 
-          mask[line_no][col_no] = 1
-          col_no += 1
-          if col_no >= self.max_window_size:
-            break
-          word_num[line_no] = col_no
+        x[line_no][col_no] = int(i) 
+        mask[line_no][col_no] = 1
+        col_no += 1
+        if col_no >= self.max_window_size:
+          break
+      word_num[line_no] = col_no
       line_no += 1
     return x, np.array(y).reshape(batch_size, 1), mask.reshape(batch_size, self.max_window_size, 1), word_num.reshape(batch_size, 1)
 
-  def create_data_for_infer(self):
-    print self.seed_seller_size
-    print self.max_window_size
-    batch = [x for x in range(self.seed_seller_size)]
-    x = np.zeros((self.seed_seller_size, self.max_window_size))
-    mask = np.zeros((self.seed_seller_size, self.max_window_size))
+  def create_data_for_infer(self, pos, batch_size, data_lst):
+    batch = data_lst[pos:pos+batch_size]
+    x = np.zeros((batch_size, self.max_window_size))
+    mask = np.zeros((batch_size, self.max_window_size))
     
-    word_num = np.zeros((self.seed_seller_size))
+    word_num = np.zeros((batch_size))
     line_no = 0
     for line in batch:
       x[line_no][0] = line
@@ -140,7 +137,7 @@ class TFDnnS2S(object):
       word_num[line_no] = 1
       line_no += 1
 
-    return x, mask.reshape(self.seed_seller_size, self.max_window_size, 1), word_num.reshape(self.seed_seller_size, 1)
+    return x, mask.reshape(batch_size, self.max_window_size, 1), word_num.reshape(batch_size, 1)
 
 
   def build_graph(self):
@@ -148,38 +145,38 @@ class TFDnnS2S(object):
    # embedding layyer
     self.embedding = {
         #'input':tf.Variable(self.vector)
-        'input':tf.Variable(tf.random_uniform([self.seed_seller_size+1, self.embedding_size], -1.0, 1.0))
+        'input':tf.Variable(tf.random_uniform([self.seed_seller_size+1, self.embedding_size], -1.0, 1.0), name='embedding')
         # 'output':tf.Variable(tf.random_uniform([len(label_dict)+1, emb_size], -1.0, 1.0))
     }
     
    # hidden layers
     self.weights = {
-        'h1': tf.Variable(tf.random_normal([self.embedding_size, self.n_hidden_1])),
-        'h2': tf.Variable(tf.random_normal([self.n_hidden_1, self.n_hidden_2])),
-        'out': tf.Variable(tf.random_normal([self.n_hidden_1, self.n_classes]))
+        'h1': tf.Variable(tf.random_normal([self.embedding_size, self.n_hidden_1]), name='h1'),
+        'h2': tf.Variable(tf.random_normal([self.n_hidden_1, self.n_hidden_2]), name='h2'),
+        #'out': tf.Variable(tf.random_normal([self.n_hidden_1, self.n_classes]))
     }
     self.biases = {
-        'b1': tf.Variable(tf.random_normal([self.n_hidden_1])),
-        'b2': tf.Variable(tf.random_normal([self.n_hidden_2])),
-        'out': tf.Variable(tf.random_normal([self.n_classes]))
+        'b1': tf.Variable(tf.random_normal([self.n_hidden_1]), name='b1'),
+        'b2': tf.Variable(tf.random_normal([self.n_hidden_2]), name='b2'),
+        #'out': tf.Variable(tf.random_normal([self.n_classes]))
     }
 
-    self.emb_mask = tf.placeholder(tf.float32, shape=[None, self.max_window_size, 1])
-    self.word_num = tf.placeholder(tf.float32, shape=[None, 1])
+    self.emb_mask = tf.placeholder(tf.float32, shape=[None, self.max_window_size, 1], name='emb_mask')
+    self.word_num = tf.placeholder(tf.float32, shape=[None, 1], name='word_num')
     # the input user sp history
-    self.x_batch = tf.placeholder(tf.int32, shape=[None, self.max_window_size])
+    self.x_batch = tf.placeholder(tf.int32, shape=[None, self.max_window_size], name='x_batch')
     # current user click seller
-    self.y_batch = tf.placeholder(tf.int64, [None, 1])
+    self.y_batch = tf.placeholder(tf.int64, [None, 1], name='y_batch')
 
     # get all the embeding for sp user history
-    input_embedding = tf.nn.embedding_lookup(self.embedding['input'], self.x_batch)
+    input_embedding = tf.nn.embedding_lookup(self.embedding['input'], self.x_batch, name='input_embedding')
     # mean all the embedding for sp user history
     project_embedding = tf.div(tf.reduce_sum(tf.multiply(input_embedding,self.emb_mask), 1),self.word_num)
 
     # layer 1
     layer_1 = tf.nn.relu(
               tf.add(tf.matmul(project_embedding, self.weights['h1']), self.biases['b1']))
-    dlayer_1 = tf.nn.dropout(layer_1, 0.5)
+    #dlayer_1 = tf.nn.dropout(layer_1, 0.5)
     layer_2 = tf.nn.relu(tf.add(tf.matmul(layer_1, self.weights['h2']), self.biases['b2']))
 
     return layer_2, self.y_batch
@@ -232,11 +229,19 @@ class TFDnnS2S(object):
 
       start_time = time.time()
       total_batch = int(len(train_lst) / self.batch_size)
-      print("total_batch of training data: ", total_batch)
+      print("total_batch of training data: ", total_batch, ", start at: ", time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
       for epoch in range(self.training_epochs):
         avg_cost = 0.
         for i in range(total_batch):
           x, y, batch_mask, word_number = self.read_data(i * self.batch_size, self.batch_size, train_lst)
+          #print "x"
+          #print x
+          #print "y"
+          #print y
+          #print "batch mask"
+          #print batch_mask
+          #print "word_number"
+          #print word_number
           _,c = sess.run([optimizer, cost], feed_dict={self.x_batch: x, self.emb_mask: batch_mask, self.word_num: word_number, self.y_batch: y})
           avg_cost += c / total_batch
 
@@ -244,18 +249,22 @@ class TFDnnS2S(object):
             #      "{:.9f}".format(c))
 
         if epoch % self.display_step == 0:
-          print("Epoch:", '%04d' % (epoch + 1), "cost=", \
+          print(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), " Epoch:", '%04d' % (epoch + 1), "cost=", \
                 "{:.9f}".format(avg_cost))
+          sys.stdout.flush()
       y = tf.nn.softmax(out_layer)
       tf.add_to_collection('predictor', y)
       tf.add_to_collection('x_batch', self.x_batch)
       tf.add_to_collection('emb_mask', self.emb_mask)
       tf.add_to_collection('word_num', self.word_num)
-      saver.save(sess, './model/model.ckpt')
+      #tf.add_to_collection("embedding", self.embedding['input'])
+      saver.save(sess, './model1/model.ckpt')
 
   def restore(self):
-    train_file='click_data_sample.txt'
-    self.init_data(train_file, 'word2vec.txt')
+    train_file='processed_click_data.txt'
+    #self.init_data(train_file, 'word2vec.txt')
+    #pred_ids = [x for x in range(self.seed_seller_size)]
+    pred_ids = linecache.getlines(train_file)
 
     with tf.Session() as sess:
       new_saver = tf.train.import_meta_graph('model/model.ckpt.meta')
@@ -267,20 +276,29 @@ class TFDnnS2S(object):
       word_num = tf.get_collection('word_num')[0]
 
       graph = tf.get_default_graph()
+      #embedding = graph.get_operation_by_name('self.embedding').outputs[0]
 
       # 因为y中有placeholder，所以sess.run(y)的时候还需要用实际待预测的样本以及相应的参数来填充这些placeholder，而这些需要通过graph的get_operation_by_name方法来获取。
       #x_batch = graph.get_operation_by_name('self.x_batch').outputs[0]
       #emb_mask = graph.get_operation_by_name('self.emb_mask').outputs[0]
       #word_num = graph.get_operation_by_name('self.word_num').outputs[0]
 
+
+
+
       # 使用y进行预测  
-      x, batch_mask, word_number = self.create_data_for_infer()
-      print len(x)
-      print len(batch_mask)
-      print len(word_number)
-      predict_op = tf.nn.top_k(y, 200, False)
-      predict_result = sess.run(predict_op, feed_dict={x_batch:x, emb_mask: batch_mask, word_num: word_number})
-      print predict_result
+      self.batch_size = 100
+      total_batch = int(len(pred_ids))/self.batch_size
+      print ("Total inference batch: ", str(total_batch))
+      for i in range(total_batch):
+        #x, batch_mask, word_number = self.create_data_for_infer(i*self.batch_size, self.batch_size, pred_ids)
+        x, y_batch, batch_mask, word_number = self.read_data(i*self.batch_size, self.batch_size, pred_ids)
+        print x
+        predict_op = tf.nn.top_k(y, 200, False)
+        predict_result = sess.run(predict_op, feed_dict={x_batch:x, emb_mask: batch_mask, word_num: word_number})
+        print predict_result
+        #
+        sys.stdout.flush()
 
 exp = TFDnnS2S()
 #exp.restore()
