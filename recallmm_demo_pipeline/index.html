@@ -48,7 +48,7 @@ function RemoteRequest(table_str, id, res_field)
     var xhr=new ActiveXObject("Microsoft.XMLHTTP");
    };
    //设置发送数据的地址和方法
-  xhr.open("GET","/itemcf?table="+table_str+"&id="+id,true);
+  xhr.open("GET","/show?query="+id,true);
    //设置我们的请求头信息,post方法才写请求头
    //xhr.setRequestHeader("Content-type","application/json");
    //发送数据
@@ -69,8 +69,8 @@ function RemoteRequest(table_str, id, res_field)
     h+="</tr>";
     for(var i=0;i<data.length;i++){
       h+="<tr>"
-      e="<td>"+data[i][1]+"</td> <td><a href=\"https://item.taobao.com/item.htm?id="+data[i][0]+"/>"+data[i][2]+"</td>"
-      e+="<td>"+data[i][4]+"</td>"
+      e="<td>"+data[i][1]+"</td> <td><a href=\"https://item.taobao.com/item.htm?id="+data[i][0]+"\"/>"+data[i][2]+"</td>"
+      e+="<td> <img src=\"https://img.alicdn.com/imgextra/"+data[i][3]+"\" width=\"200px\" height=\"200px\"/> </td> <td>"+data[i][5]+"</td>"
       h+=e
       h+="</tr>";
     }
@@ -84,16 +84,14 @@ function RemoteRequest(table_str, id, res_field)
 function ClickButton1()
 {
    document.getElementById('field1').innerHTML=''
-   var table_str = document.getElementById('table1').value;
    var id = document.getElementById('id1').value;
-   RemoteRequest(table_str, id, 'field1');
+   RemoteRequest("", id, 'field1');
 }
 function ClickButton2()
 {
    document.getElementById('field2').innerHTML=''
-   var table_str = document.getElementById('table2').value;
    var id = document.getElementById('id2').value;
-   RemoteRequest(table_str, id, 'field2');
+   RemoteRequest("", id, 'field2');
 }
 function ClickButton3()
 {
@@ -117,7 +115,21 @@ function ClickButton3()
   <div class='input_area' style="text-align:center">
   <input type="text" id="id1">
   <button onclick="ClickButton1()" >UPDATE</button>
+    <br>
+      <hr />
+  </div>
   <div id='field1'> </div>
+</div>
+
+<div id='side2'>
+  <h1 style="font-family:verdana;text-align:center">Side2</h1>
+  <div class='input_area' style="text-align:center">
+  <input type="text" id="id2">
+  <button onclick="ClickButton2()" >UPDATE</button>
+    <br>
+   <hr />
+  </div>
+  <div id='field2'> </div>
 </div>
 
 

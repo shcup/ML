@@ -18,7 +18,7 @@ import json
 import io,shutil,urllib
 import urlparse
 
-from get_itemcf_detail_list import *
+from get_recall_list import *
 
 
 db=LiteSQL()

@@ -51,10 +51,10 @@ class LiteSQL():
     except:
       traceback.print_exc()
 
-    sorted_related_list = sorted(relate_list.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
+    sorted_related_list = sorted(relate_list.items(), lambda x, y: cmp(x[1], y[1]), reverse=False)
     for k, v in sorted_related_list:
       if k in id_detail:
-        res.append([k, v, id_detail[k][1], id_detail[k][2], id_detail[k][3],  id_detail[k][3] ])
+        res.append([k, v, id_detail[k][1], id_detail[k][2], id_detail[k][3],  id_detail[k][4] ])
       else:
         res.append([k, v, '', '', '', ''])
     return res
