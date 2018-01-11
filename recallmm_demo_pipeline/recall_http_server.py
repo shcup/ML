@@ -10,6 +10,7 @@ import itertools
 import sys
 
 import numpy as np
+from scipy.linalg.misc import norm
 
 from BaseHTTPServer import BaseHTTPRequestHandler
 import cgi
@@ -17,10 +18,11 @@ import json
 import io,shutil,urllib
 import urlparse
 
-from get_recall_list import *
+from get_itemcf_detail_list import *
 
 
 db=LiteSQL()
+index_str = open('index.html').read()
 
 class TodoHandler(BaseHTTPRequestHandler):
   """A simple TODO server
@@ -90,6 +92,6 @@ class TodoHandler(BaseHTTPRequestHandler):
 if __name__ == '__main__':
   # Start a simple server, and loop forever
   from BaseHTTPServer import HTTPServer
-  server = HTTPServer(('11.238.200.106', 2345), TodoHandler)
+  server = HTTPServer(('11.238.200.106', 8888), TodoHandler)
   print("Starting server, use <Ctrl-C> to stop")
   server.serve_forever()
