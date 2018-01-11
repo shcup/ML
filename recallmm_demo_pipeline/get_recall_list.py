@@ -9,13 +9,13 @@ import sqlite3 as lite
 
 class LiteSQL():
   def __init__(self):
-    self.con = lite.connect('itemcf.db')
+    self.con = lite.connect('recallmm.db')
     self.con.text_factory = str
     self.cur = self.con.cursor()
 
   def get(self, query):
-    sql1 = "select list from relevence where query = %s" % (query)
-    sql2 = "select id, title, pic, cat, subtitle from detail_table where "
+    sql1 = "select list from relevence where query =\"%s\"" % (query)
+    sql2 = "select id, title, pic, cate, subtitle from item_table where "
     sql3 = "select query, quyercate from query_table where query = %s" % (query)
     relate_list = {}
     id_detail = {}
@@ -24,14 +24,17 @@ class LiteSQL():
     try:
       self.cur.execute(sql1)
       r = self.cur.fetchall()
+      print sql1
+      print str(r)
       if len(r) > 0:
-        items = r[0][0].strip().split(';')
+        items = r[0][0].strip().split(',')
         first = 0
-        print len(items)
-        for item in items:
-          id, score = item.split(',', 1)
-          if float(score) == 0:
-            continue
+        length = len(items)
+        idx = 0
+        while idx < length:
+          id = items[idx]
+          score = items[idx+1]
+          idx = idx + 2
           relate_list[int(id)] = float(score)
           if (first != 0):
             sql2 = sql2 + " or id=" + id

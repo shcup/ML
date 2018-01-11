@@ -17,11 +17,10 @@ import json
 import io,shutil,urllib
 import urlparse
 
-from get_itemcf_detail_list import *
+from get_recall_list import *
 
 
 db=LiteSQL()
-index_str = open('index.html').read()
 
 class TodoHandler(BaseHTTPRequestHandler):
   """A simple TODO server
@@ -54,7 +53,7 @@ class TodoHandler(BaseHTTPRequestHandler):
         self.send_error(501, 'query not found')
         return
 
-      res = db.get(int(params['query'][0]))
+      res = db.get(params['query'][0])
       message = json.dumps(res)
 
       self.send_response(200)
@@ -91,6 +90,6 @@ class TodoHandler(BaseHTTPRequestHandler):
 if __name__ == '__main__':
   # Start a simple server, and loop forever
   from BaseHTTPServer import HTTPServer
-  server = HTTPServer(('11.238.200.106', 8899), TodoHandler)
+  server = HTTPServer(('11.238.200.106', 2345), TodoHandler)
   print("Starting server, use <Ctrl-C> to stop")
   server.serve_forever()
