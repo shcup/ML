@@ -50,8 +50,10 @@ def AnnoyInfer(filename, ids, vec_len):
     j = 0
     length = len(list)
     while (j < length):
-      print (sp[0] + "\t" + ids[list[j]] + "\t" + str(score[j]))
+      res.append(ids[list[j]] + "," + str(score[j]))
       j = j + 1
+      idx = idx + 1
+    print (sp[0] + "\t" + ",".join(res))
 
 item_vector = sys.argv[2]
 query_vector = sys.argv[1]
